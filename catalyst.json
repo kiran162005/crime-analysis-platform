@@ -1,0 +1,25 @@
+{
+  "functions": {
+    "targets": [
+      "crime_analysis_platform_function"
+    ],
+    "ignore": [],
+    "source": "functions"
+  },
+  "client": {
+    "source": "crime-analysis-platform-ui",
+    "plugin": "zcatalyst-cli-plugin-react"
+  },
+  "appsail": [
+    {
+      "source": "appsail-python",
+      "name": "crime-analysis-api"
+    }
+  ],
+  "slate": [
+    {
+      "name": "crime-analysis-slate",
+      "source": "crime-analysis-slate"
+    }
+  ]
+}
