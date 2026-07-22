@@ -1,6 +1,7 @@
 
 # Project Structure
 
+```text
 crime-analysis-platform/
 │
 ├── .gitignore
@@ -49,5 +50,6 @@ crime-analysis-platform/
 │   └── samples/
 │
 └── scripts/
+```
 
 ---
