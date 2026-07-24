@@ -1,5 +1,5 @@
 """
-network-analysis/mo-similarity/quickml_client.py
+network-analysis/mo_similarity/quickml_client.py
 Owner: Network & Link Analysis Engineer
 """
 
@@ -40,16 +40,25 @@ class QuickMLSimilarityClient:
             print(f"[QuickML Client Warning] Similarity lookup failed for {incident_id}: {err}")
             return []
 
-    def format_mo_edges(self, target_entity_id: str, target_entity_type: str, similar_matches: list) -> list:
+    def format_mo_edges(self, source_incident_id: str, similar_matches: list) -> list:
         """
-        Converts QuickML similarity matches into edge dicts matching the links schema.
+        Converts QuickML similarity matches into Incident-to-Incident edges
+        matching the canonical lexicographical ordering rule.
         """
         mo_edges = []
         for match in similar_matches:
+            target_inc_id = str(match["incident_id"])
+            str_a, str_b = str(source_incident_id), target_inc_id
+
+            if str_a < str_b:
+                entity_a, entity_b = str_a, str_b
+            else:
+                entity_a, entity_b = str_b, str_a
+
             mo_edges.append({
-                "entity_a_id": str(target_entity_id),
-                "entity_a_type": target_entity_type,
-                "entity_b_id": str(match["incident_id"]),
+                "entity_a_id": entity_a,
+                "entity_a_type": "incident",
+                "entity_b_id": entity_b,
                 "entity_b_type": "incident",
                 "relation_type": "mo_similar",
                 "weight": round(match["score"], 2)
