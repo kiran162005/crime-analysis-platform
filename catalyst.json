@@ -1,7 +1,8 @@
 {
   "functions": {
     "targets": [
-      "crime_analysis_platform_function"
+      "crime_analysis_platform_function",
+      "incidents-crud"
     ],
     "ignore": [],
     "source": "functions"
@@ -21,5 +22,8 @@
       "name": "crime-analysis-slate",
       "source": "crime-analysis-slate"
     }
-  ]
+  ],
+  "apig": {
+    "enabled": true
+  }
 }
