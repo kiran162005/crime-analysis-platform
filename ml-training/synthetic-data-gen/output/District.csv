@@ -1,0 +1,11 @@
+DistrictID,DistrictName,StateID,CentroidLat,CentroidLon
+1,Bengaluru Urban,1,12.9716,77.5946
+2,Mysuru,1,12.2958,76.6394
+3,Mangaluru (Dakshina Kannada),1,12.9141,74.856
+4,Belagavi,1,15.8497,74.4977
+5,Hubballi-Dharwad,1,15.3647,75.124
+6,Kalaburagi,1,17.3297,76.8343
+7,Ballari,1,15.1394,76.9214
+8,Tumakuru,1,13.3379,77.1173
+9,Shivamogga,1,13.9299,75.5681
+10,Davanagere,1,14.4644,75.9218

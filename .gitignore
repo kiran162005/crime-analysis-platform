@@ -72,4 +72,3 @@ logs/
 .build/
 
 # Temporary deployment artifacts
-output/
