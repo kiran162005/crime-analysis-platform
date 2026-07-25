@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
+from district_indicators import DISTRICT_INDICATORS
 
 app = Flask(__name__)
 
@@ -159,6 +160,48 @@ def detect_anomalies_endpoint():
         "total": int(len(df)),
         "flagged_count": int(len(flagged)),
         "params": {"contamination": contamination},
+    })
+
+
+@app.route('/socioeconomic', methods=['POST'])
+def socioeconomic_correlation():
+    """
+    POST a JSON body: {"incidents": [{"CaseMasterID":.., "DistrictID":..}, ...]}
+
+    Computes district-level incident counts from the posted incidents and
+    correlates them against the embedded socio-economic indicators. Same
+    stateless request/response pattern as /hotspots and /anomalies — no
+    separate data file to keep in sync.
+
+    Returns per-district rows plus overall Pearson correlations, so the
+    frontend can render both a per-district chart and a summary
+    ("population density correlates at r=0.87 with incident count").
+    """
+    body = request.get_json(force=True)
+    if not body or "incidents" not in body:
+        return jsonify({"error": "Expected JSON body with an 'incidents' array"}), 400
+
+    df = pd.DataFrame(body["incidents"])
+    if df.empty or "DistrictID" not in df.columns:
+        return jsonify({"error": "Missing required field: DistrictID"}), 400
+
+    crime_counts = df.groupby("DistrictID").size().rename("total_incidents")
+
+    indicators_df = pd.DataFrame.from_dict(DISTRICT_INDICATORS, orient="index")
+    indicators_df.index.name = "DistrictID"
+
+    merged = indicators_df.join(crime_counts).fillna({"total_incidents": 0}).reset_index()
+    merged["crime_rate_proxy"] = merged["total_incidents"] / merged["population_density"] * 1000
+
+    correlations = {}
+    for indicator in ["population_density", "literacy_rate", "urbanization_pct"]:
+        corr = merged[indicator].corr(merged["total_incidents"])
+        correlations[indicator] = round(float(corr), 3) if pd.notna(corr) else None
+
+    return jsonify({
+        "districts": merged.to_dict(orient="records"),
+        "correlations": correlations,
+        "note": "Socio-economic indicators are synthetic approximations for this demo, not real Census data. n=10 districts — treat correlation strength as illustrative, not statistically rigorous.",
     })
 
 
