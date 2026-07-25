@@ -19,6 +19,7 @@ import { getDistrictData } from '../data/mockDashboardData';
 import mockHotspotData from '../data/mockHotspotData';
 import { useAuth } from '../auth/AuthContext';
 import AppHeader from '../components/layout/AppHeader';
+import ChatPanel from '../components/ask-scrb/ChatPanel';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ export default function Dashboard() {
     isDistrictLocked ? { name: user.district } : null
   );
   const [showHotspots, setShowHotspots] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [alertsLoading, setAlertsLoading] = useState(true);
 
@@ -138,6 +140,36 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {!chatOpen && (
+        <button
+          onClick={() => setChatOpen(true)}
+          style={{
+            position: 'fixed',
+            right: 20,
+            bottom: 20,
+            width: 56,
+            height: 56,
+            borderRadius: '50%',
+            background: 'var(--color-accent)',
+            color: '#ffffff',
+            border: 'none',
+            boxShadow: '0 6px 20px rgba(194, 65, 12, 0.4)',
+            cursor: 'pointer',
+            fontSize: 22,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999,
+          }}
+          aria-label="Open Ask SCRB chat"
+          title="Ask SCRB"
+        >
+          💬
+        </button>
+      )}
+
+      {chatOpen && <ChatPanel onClose={() => setChatOpen(false)} />}
     </div>
   );
 }

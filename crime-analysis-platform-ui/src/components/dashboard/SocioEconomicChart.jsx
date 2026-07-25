@@ -19,6 +19,7 @@ import {
 import {
   DISTRICT_SOCIOECONOMIC_DATA,
   INDICATOR_OPTIONS,
+  SOCIOECONOMIC_NOTE,
   getCorrelation,
 } from '../../data/socioEconomicData';
 
@@ -92,8 +93,7 @@ export default function SocioEconomicChart() {
         Pearson r = <strong>{correlation.toFixed(3)}</strong> — a {strength} {direction} relationship.
       </p>
       <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>
-        Statistical correlation (not ML), n=10 districts — a small sample. Indicators are
-        synthetic approximations, not real Census data. Treat as illustrative, not a rigorous finding.
+        {SOCIOECONOMIC_NOTE}
       </p>
     </div>
   );
