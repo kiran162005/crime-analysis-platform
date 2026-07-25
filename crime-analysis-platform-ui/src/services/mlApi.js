@@ -92,3 +92,47 @@ export function transformAnomaliesResponse(apiResponse) {
     };
   });
 }
+
+/**
+ * POST /socioeconomic — real call. Needs an `incidents` array shaped
+ * like [{ CaseMasterID, DistrictID }, ...] (only DistrictID is required
+ * per-row; the endpoint aggregates counts itself).
+ */
+export async function fetchSocioeconomicFromApi(incidents) {
+  const res = await fetch(`${ML_API_BASE_URL}/socioeconomic`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ incidents }),
+  });
+  if (!res.ok) throw new Error(`Socioeconomic API error: ${res.status}`);
+  return res.json(); // { districts: [...], correlations: {...}, note }
+}
+
+/**
+ * Converts a raw /socioeconomic API response into the shape
+ * SocioEconomicChart.jsx expects: a camelCase district array, a
+ * correlations lookup by indicator key, and the backend's own caveat
+ * text (so the disclaimer shown in the UI always matches whatever the
+ * ML Engineer wrote server-side, not a copy that can drift).
+ */
+export function transformSocioeconomicResponse(apiResponse) {
+  const { districts = [], correlations = {}, note = '' } = apiResponse;
+
+  const districtData = districts.map((d) => ({
+    districtId: d.DistrictID,
+    name: d.name,
+    populationDensity: d.population_density,
+    literacyRate: d.literacy_rate,
+    urbanizationPct: d.urbanization_pct,
+    totalIncidents: d.total_incidents,
+    crimeRateProxy: d.crime_rate_proxy,
+  }));
+
+  const correlationsByKey = {
+    populationDensity: correlations.population_density,
+    literacyRate: correlations.literacy_rate,
+    urbanizationPct: correlations.urbanization_pct,
+  };
+
+  return { districtData, correlationsByKey, note };
+}

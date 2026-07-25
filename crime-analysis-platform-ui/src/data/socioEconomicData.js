@@ -1,39 +1,45 @@
 /**
  * data/socioEconomicData.js
- * Real data from ml-training/socio-economic/district_socioeconomic_correlation.csv
- * — synthetic indicators (not real Census figures) correlated against
- * synthetic incident counts, computed via Pearson correlation, n=10
- * districts. This is a statistical overlay, not ML — say so in the UI.
+ * The mock payload below is shaped EXACTLY like a real /socioeconomic
+ * API response from appsail-python/app.py, run through
+ * transformSocioeconomicResponse() — the same function that'll process
+ * the real response. When the ML service is live, replace
+ * mockRawSocioeconomicResponse with fetchSocioeconomicFromApi(incidents)
+ * and nothing else changes.
+ *
+ * Correlation values and the caveat note both come from the backend's
+ * own computation now, not a separate JS re-implementation — single
+ * source of truth.
  */
+import { transformSocioeconomicResponse } from '../services/mlApi';
 
-export const DISTRICT_SOCIOECONOMIC_DATA = [
-  { districtId: 1, name: 'Bengaluru Urban', populationDensity: 4381, literacyRate: 87.7, urbanizationPct: 91.0, totalIncidents: 5146, crimeRateProxy: 1174.62 },
-  { districtId: 2, name: 'Mysuru', populationDensity: 481, literacyRate: 72.6, urbanizationPct: 46.6, totalIncidents: 2106, crimeRateProxy: 4378.38 },
-  { districtId: 3, name: 'Mangaluru (Dakshina Kannada)', populationDensity: 460, literacyRate: 88.6, urbanizationPct: 46.4, totalIncidents: 2216, crimeRateProxy: 4817.39 },
-  { districtId: 4, name: 'Belagavi', populationDensity: 316, literacyRate: 73.9, urbanizationPct: 27.9, totalIncidents: 806, crimeRateProxy: 2550.63 },
-  { districtId: 5, name: 'Hubballi-Dharwad', populationDensity: 401, literacyRate: 79.4, urbanizationPct: 58.1, totalIncidents: 842, crimeRateProxy: 2099.75 },
-  { districtId: 6, name: 'Kalaburagi', populationDensity: 316, literacyRate: 63.7, urbanizationPct: 32.9, totalIncidents: 2356, crimeRateProxy: 7455.70 },
-  { districtId: 7, name: 'Ballari', populationDensity: 332, literacyRate: 67.4, urbanizationPct: 39.6, totalIncidents: 2146, crimeRateProxy: 6463.86 },
-  { districtId: 8, name: 'Tumakuru', populationDensity: 268, literacyRate: 74.5, urbanizationPct: 24.6, totalIncidents: 817, crimeRateProxy: 3048.51 },
-  { districtId: 9, name: 'Shivamogga', populationDensity: 246, literacyRate: 81.3, urbanizationPct: 30.9, totalIncidents: 824, crimeRateProxy: 3349.59 },
-  { districtId: 10, name: 'Davanagere', populationDensity: 331, literacyRate: 75.7, urbanizationPct: 34.9, totalIncidents: 741, crimeRateProxy: 2238.67 },
-];
+const mockRawSocioeconomicResponse = {
+  districts: [
+    { DistrictID: 1, name: 'Bengaluru Urban', population_density: 4381, literacy_rate: 87.7, urbanization_pct: 91.0, total_incidents: 5146, crime_rate_proxy: 1174.62 },
+    { DistrictID: 2, name: 'Mysuru', population_density: 481, literacy_rate: 72.6, urbanization_pct: 46.6, total_incidents: 2106, crime_rate_proxy: 4378.38 },
+    { DistrictID: 3, name: 'Mangaluru (Dakshina Kannada)', population_density: 460, literacy_rate: 88.6, urbanization_pct: 46.4, total_incidents: 2216, crime_rate_proxy: 4817.39 },
+    { DistrictID: 4, name: 'Belagavi', population_density: 316, literacy_rate: 73.9, urbanization_pct: 27.9, total_incidents: 806, crime_rate_proxy: 2550.63 },
+    { DistrictID: 5, name: 'Hubballi-Dharwad', population_density: 401, literacy_rate: 79.4, urbanization_pct: 58.1, total_incidents: 842, crime_rate_proxy: 2099.75 },
+    { DistrictID: 6, name: 'Kalaburagi', population_density: 316, literacy_rate: 63.7, urbanization_pct: 32.9, total_incidents: 2356, crime_rate_proxy: 7455.70 },
+    { DistrictID: 7, name: 'Ballari', population_density: 332, literacy_rate: 67.4, urbanization_pct: 39.6, total_incidents: 2146, crime_rate_proxy: 6463.86 },
+    { DistrictID: 8, name: 'Tumakuru', population_density: 268, literacy_rate: 74.5, urbanization_pct: 24.6, total_incidents: 817, crime_rate_proxy: 3048.51 },
+    { DistrictID: 9, name: 'Shivamogga', population_density: 246, literacy_rate: 81.3, urbanization_pct: 30.9, total_incidents: 824, crime_rate_proxy: 3349.59 },
+    { DistrictID: 10, name: 'Davanagere', population_density: 331, literacy_rate: 75.7, urbanization_pct: 34.9, total_incidents: 741, crime_rate_proxy: 2238.67 },
+  ],
+  correlations: {
+    population_density: 0.294,
+    literacy_rate: 0.294,
+    urbanization_pct: 0.31,
+  },
+  note: 'Socio-economic indicators are synthetic approximations for this demo, not real Census data. n=10 districts — treat correlation strength as illustrative, not statistically rigorous.',
+};
 
-/** Pearson correlation coefficient — mirrors scipy.stats.pearsonr's `r`. */
-export function pearsonCorrelation(xs, ys) {
-  const n = xs.length;
-  const meanX = xs.reduce((a, b) => a + b, 0) / n;
-  const meanY = ys.reduce((a, b) => a + b, 0) / n;
-  let num = 0, denomX = 0, denomY = 0;
-  for (let i = 0; i < n; i++) {
-    const dx = xs[i] - meanX;
-    const dy = ys[i] - meanY;
-    num += dx * dy;
-    denomX += dx * dx;
-    denomY += dy * dy;
-  }
-  return num / Math.sqrt(denomX * denomY);
-}
+const { districtData, correlationsByKey, note } = transformSocioeconomicResponse(
+  mockRawSocioeconomicResponse
+);
+
+export const DISTRICT_SOCIOECONOMIC_DATA = districtData;
+export const SOCIOECONOMIC_NOTE = note;
 
 export const INDICATOR_OPTIONS = [
   { key: 'populationDensity', label: 'Population Density' },
@@ -41,8 +47,7 @@ export const INDICATOR_OPTIONS = [
   { key: 'urbanizationPct', label: 'Urbanization (%)' },
 ];
 
+/** Looks up the backend-computed correlation for an indicator key. */
 export function getCorrelation(indicatorKey) {
-  const xs = DISTRICT_SOCIOECONOMIC_DATA.map((d) => d[indicatorKey]);
-  const ys = DISTRICT_SOCIOECONOMIC_DATA.map((d) => d.totalIncidents);
-  return pearsonCorrelation(xs, ys);
+  return correlationsByKey[indicatorKey] ?? 0;
 }
