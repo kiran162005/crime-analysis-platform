@@ -1,11 +1,11 @@
 {
-	"command": "python3 app.py",
-	"build_path": "./",
-	"stack": "python_3_9",
-	"env_variables": {},
-	"memory": 256,
-	"scripts": {
-		"preserve": "python3 -m pip install -r ./requirements.txt -t ./ --upgrade",
-		"predeploy": "python3 -m pip install -r ./requirements.txt -t ./ --upgrade"
-	}
+        "command": "python3 app.py",
+        "build_path": "./",
+        "stack": "python_3_11",
+        "env_variables": {},
+        "memory": 256,
+        "scripts": {
+                "preserve": "python -m pip install -r ./requirements.txt -t ./ --upgrade",
+                "predeploy": "python -m pip install -r ./requirements.txt -t ./ --upgrade"
+        }
 }

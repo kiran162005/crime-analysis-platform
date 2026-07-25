@@ -2,7 +2,13 @@
   "functions": {
     "targets": [
       "crime_analysis_platform_function",
-      "incidents-crud"
+      "alerts",
+      "authentication",
+      "incident-crud",
+      "links-crud",
+      "risk-score",
+      "station-crud",
+      "victim-crud"
     ],
     "ignore": [],
     "source": "functions"
