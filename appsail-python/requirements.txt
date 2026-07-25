@@ -1,1 +1,7 @@
 Flask==2.3.2
+pandas
+numpy
+scikit-learn
+python-dotenv
+requests
+ 

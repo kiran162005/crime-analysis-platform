@@ -1,10 +1,16 @@
 from flask import Flask, request, jsonify
 import os
+from dotenv import load_dotenv
 import pandas as pd
 import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
+from district_indicators import DISTRICT_INDICATORS
+
+load_dotenv()  # loads .env for local dev — Catalyst's deployed environment
+                # should set CATALYST_ACCESS_TOKEN via its own env var
+                # config instead, .env files aren't meant to be deployed
 
 app = Flask(__name__)
 
@@ -159,6 +165,121 @@ def detect_anomalies_endpoint():
         "total": int(len(df)),
         "flagged_count": int(len(flagged)),
         "params": {"contamination": contamination},
+    })
+
+
+@app.route('/socioeconomic', methods=['POST'])
+def socioeconomic_correlation():
+    """
+    POST a JSON body: {"incidents": [{"CaseMasterID":.., "DistrictID":..}, ...]}
+
+    Computes district-level incident counts from the posted incidents and
+    correlates them against the embedded socio-economic indicators. Same
+    stateless request/response pattern as /hotspots and /anomalies — no
+    separate data file to keep in sync.
+
+    Returns per-district rows plus overall Pearson correlations, so the
+    frontend can render both a per-district chart and a summary
+    ("population density correlates at r=0.87 with incident count").
+    """
+    body = request.get_json(force=True)
+    if not body or "incidents" not in body:
+        return jsonify({"error": "Expected JSON body with an 'incidents' array"}), 400
+
+    df = pd.DataFrame(body["incidents"])
+    if df.empty or "DistrictID" not in df.columns:
+        return jsonify({"error": "Missing required field: DistrictID"}), 400
+
+    crime_counts = df.groupby("DistrictID").size().rename("total_incidents")
+
+    indicators_df = pd.DataFrame.from_dict(DISTRICT_INDICATORS, orient="index")
+    indicators_df.index.name = "DistrictID"
+
+    merged = indicators_df.join(crime_counts).fillna({"total_incidents": 0}).reset_index()
+    merged["crime_rate_proxy"] = merged["total_incidents"] / merged["population_density"] * 1000
+
+    correlations = {}
+    for indicator in ["population_density", "literacy_rate", "urbanization_pct"]:
+        corr = merged[indicator].corr(merged["total_incidents"])
+        correlations[indicator] = round(float(corr), 3) if pd.notna(corr) else None
+
+    return jsonify({
+        "districts": merged.to_dict(orient="records"),
+        "correlations": correlations,
+        "note": "Socio-economic indicators are synthetic approximations for this demo, not real Census data. n=10 districts — treat correlation strength as illustrative, not statistically rigorous.",
+    })
+
+
+@app.route('/chat', methods=['POST'])
+def ask_scrb():
+    """
+    POST a JSON body: {"query": "What chain snatching incidents have been
+    reported in Bengaluru?"}
+
+    Proxies the query to Catalyst QuickML's RAG API server-side, so any
+    auth token stays server-side and the response shape stays consistent
+    with /hotspots, /anomalies, /socioeconomic.
+
+    CONFIRMED WORKING (tested 2026-07-25) — real query against the real
+    rag_chunks Knowledge Base returned correct, cited results.
+
+    Auth: uses CATALYST_ACCESS_TOKEN from environment (.env locally).
+    This is currently a personal OAuth access token (Self Client flow,
+    scope QuickML.rag.READ) — expires ~1hr, needs manual refresh via the
+    saved refresh_token. NOT yet a proper app-level/service credential —
+    flagged in PROGRESS.md as a known gap to fix before final deploy,
+    since a token tied to one person's account isn't the right long-term
+    auth model for a deployed service.
+    """
+    body = request.get_json(force=True)
+    if not body or "query" not in body:
+        return jsonify({"error": "Expected JSON body with a 'query' field"}), 400
+
+    query = body["query"]
+
+    QUICKML_RAG_ENDPOINT_URL = "https://console.catalyst.zoho.in/quickml/v1/project/55774000000016010/rag/answer"
+    KNOWLEDGE_BASE_DOC_ID = "7262000000003002"  # confirmed — your rag_chunks doc
+
+    import requests
+    access_token = os.getenv("CATALYST_ACCESS_TOKEN", "")
+
+    quickml_response = requests.post(
+        QUICKML_RAG_ENDPOINT_URL,
+        headers={
+            "CATALYST-ORG": "60079412156",
+            "Authorization": f"Zoho-oauthtoken {access_token}",
+        },
+        json={"query": query, "documents": [KNOWLEDGE_BASE_DOC_ID]},
+    )
+
+    if quickml_response.status_code != 200:
+        return jsonify({
+            "error": "quickml_request_failed",
+            "status": quickml_response.status_code,
+            "detail": quickml_response.text,
+        }), 502
+
+    result = quickml_response.json()
+
+    # Confirmed field names from a real successful call (2026-07-25):
+    # - answer text is in result['response']
+    # - citations are in result['retrieved_nodes'] — each has document_id,
+    #   document_title, and the raw content chunk actually used to answer
+    answer = result.get("response")
+
+    retrieved_nodes = result.get("retrieved_nodes", [])
+    sources = [{
+        "document_id": node.get("document_id"),
+        "document_title": node.get("document_title"),
+        # content is a large combined text block (QuickML's own chunking
+        # doesn't line up 1:1 with our one-case-per-paragraph prep) —
+        # send a preview, not the full block, so the payload stays light
+        "content_preview": (node.get("content", "")[:300] + "...") if node.get("content") else None,
+    } for node in retrieved_nodes]
+
+    return jsonify({
+        "answer": answer,
+        "sources": sources,
     })
 
 
