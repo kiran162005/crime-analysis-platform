@@ -1,0 +1,10 @@
+{
+	"name": "trend_alert_job",
+	"version": "1.0.0",
+	"private": true,
+	"main": "index.js",
+	"author": "santoshshankar7473@gmail.com",
+	"dependencies": {
+		"zcatalyst-sdk-node": "^2.0.0"
+	}
+}

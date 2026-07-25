@@ -8,7 +8,8 @@
       "links-crud",
       "risk-score",
       "station-crud",
-      "victim-crud"
+      "victim-crud",
+      "trend_alert_job"
     ],
     "ignore": [],
     "source": "functions"

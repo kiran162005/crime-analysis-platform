@@ -1,0 +1,11 @@
+{
+	"deployment": {
+		"name": "trend_alert_job",
+		"stack": "node20",
+		"type": "job",
+		"env_variables": {}
+	},
+	"execution": {
+		"main": "index.js"
+	}
+}
