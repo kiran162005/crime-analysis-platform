@@ -11,8 +11,17 @@
  */
 import { districtName, crimeTypeName } from './lookupTables';
 
-// Set this once the ML service is deployed and reachable.
+// Set this once the ML service is deployed and reachable — see .env.example.
 const ML_API_BASE_URL = process.env.REACT_APP_ML_API_URL || 'http://localhost:9000';
+const PLACEHOLDER_URL = 'REPLACE_WITH_DEPLOYED_ML_SERVICE_URL';
+
+/** True once a real deployed URL has been set in .env (not the placeholder). */
+export function isMlApiConfigured() {
+  return Boolean(
+    process.env.REACT_APP_ML_API_URL &&
+      process.env.REACT_APP_ML_API_URL !== PLACEHOLDER_URL
+  );
+}
 
 /**
  * POST /hotspots — real call. Needs an `incidents` array shaped like
@@ -135,4 +144,42 @@ export function transformSocioeconomicResponse(apiResponse) {
   };
 
   return { districtData, correlationsByKey, note };
+}
+
+/**
+ * POST /chat — "Ask SCRB". Real, confirmed-working endpoint (per the ML
+ * Engineer's note, tested 2026-07-25) that proxies to QuickML RAG.
+ * Response shape confirmed from a real call: { answer, sources: [...] }.
+ *
+ * Known gap (their note, not ours): the backend token is a personal
+ * OAuth token that expires ~hourly and needs manual refresh — so a 502
+ * here can legitimately mean "token expired," not a bug in this code.
+ */
+export async function askScrb(query) {
+  if (!isMlApiConfigured()) {
+    const err = new Error(
+      "Ask SCRB isn't connected yet — the ML service hasn't been deployed. Once it is, set REACT_APP_ML_API_URL in .env and this will work automatically."
+    );
+    err.status = 'not_configured';
+    throw err;
+  }
+
+  const res = await fetch(`${ML_API_BASE_URL}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}));
+    const err = new Error(
+      res.status === 502
+        ? 'The Ask SCRB service is temporarily unavailable (backend auth token may need refreshing).'
+        : detail.error || `Chat request failed (${res.status})`
+    );
+    err.status = res.status;
+    throw err;
+  }
+
+  return res.json(); // { answer, sources: [{ document_id, document_title, content_preview }] }
 }
