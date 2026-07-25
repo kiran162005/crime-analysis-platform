@@ -1,0 +1,9 @@
+[
+  {
+    "name": "incidents-api",
+    "source_endpoint": "/api/incidents",
+    "target_endpoint": "/server/incidents-crud",
+    "method": "ANY",
+    "authentication": false
+  }
+]
