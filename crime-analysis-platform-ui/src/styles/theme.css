@@ -1,0 +1,119 @@
+/**
+ * theme.css
+ * Global design tokens for Karnataka SCRB Crime Analytics. Import once,
+ * in src/index.js: `import './styles/theme.css';`
+ *
+ * Direction: this is a law-enforcement instrument, not a marketing site —
+ * navy command-bar header for authority, monospaced numerals on data
+ * readouts (KPIs, badges) for a technical/instrument-panel feel, and the
+ * existing terracotta accent kept as the sole alert/severity color rather
+ * than introducing a second one.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root {
+  /* Color */
+  --color-navy-950: #0b1526;
+  --color-navy-900: #101d33;
+  --color-navy-800: #1a2e4d;
+  --color-navy-700: #294770;
+  --color-accent: #c2410c;      /* terracotta — alerts/severity, matches map + badges */
+  --color-accent-soft: #ffedd5;
+  --color-bg: #f4f5f7;          /* app background, quiet slate */
+  --color-surface: #ffffff;
+  --color-border: #e5e7eb;
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+  --color-text-faint: #9ca3af;
+
+  /* Type */
+  --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-body: 'Inter', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
+
+  /* Shape */
+  --radius-card: 12px;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 8px rgba(15, 23, 42, 0.03);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* Reusable card shell — swap ad hoc inline card styles for this class */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 18px 20px;
+}
+
+/* Small uppercase label above a card title — encodes section category */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Monospaced data readouts — KPI figures, counts, scores */
+.data-value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Role/status pill */
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-navy-800);
+  color: #ffffff;
+}
+
+/* Focus visibility, kept even through the restyle */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+button {
+  font-family: var(--font-body);
+}

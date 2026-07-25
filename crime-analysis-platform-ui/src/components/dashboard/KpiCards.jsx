@@ -1,59 +1,35 @@
 /**
  * KpiCards.jsx
- * Row of summary stat cards at the top of the dashboard. Purely
- * presentational — receives already-computed numbers via `kpis`.
+ * Row of summary stat cards. Uses the shared .card class and monospaced
+ * data-value treatment from theme.css for a consistent "instrument
+ * panel" feel across every numeric readout in the app.
  */
 import React from 'react';
-
-const cardStyle = {
-  flex: '1 1 180px',
-  background: '#ffffff',
-  border: '1px solid #e5e7eb',
-  borderRadius: 10,
-  padding: '16px 18px',
-  boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-};
-
-const labelStyle = { fontSize: 13, color: '#6b7280', marginBottom: 6 };
-const valueStyle = { fontSize: 26, fontWeight: 700, color: '#111827' };
 
 export default function KpiCards({ kpis }) {
   if (!kpis) return null;
 
-  const {
-    totalIncidents,
-    activeAlerts,
-    repeatOffenderCases,
-    momChangePercent,
-  } = kpis;
-
+  const { totalIncidents, activeAlerts, repeatOffenderCases, momChangePercent } = kpis;
   const changeColor = momChangePercent > 0 ? '#dc2626' : '#16a34a';
   const changeSign = momChangePercent > 0 ? '+' : '';
 
+  const items = [
+    { label: 'Total Incidents', value: totalIncidents.toLocaleString(), color: 'var(--color-text)' },
+    { label: 'Month-over-Month', value: `${changeSign}${momChangePercent}%`, color: changeColor },
+    { label: 'Active Alerts', value: activeAlerts, color: 'var(--color-text)' },
+    { label: 'Repeat-Offender Cases', value: repeatOffenderCases, color: 'var(--color-text)' },
+  ];
+
   return (
     <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
-      <div style={cardStyle}>
-        <div style={labelStyle}>Total Incidents</div>
-        <div style={valueStyle}>{totalIncidents.toLocaleString()}</div>
-      </div>
-
-      <div style={cardStyle}>
-        <div style={labelStyle}>Month-over-Month</div>
-        <div style={{ ...valueStyle, color: changeColor }}>
-          {changeSign}
-          {momChangePercent}%
+      {items.map((item) => (
+        <div key={item.label} className="card" style={{ flex: '1 1 180px' }}>
+          <span className="eyebrow">{item.label}</span>
+          <div className="data-value" style={{ fontSize: 26, color: item.color }}>
+            {item.value}
+          </div>
         </div>
-      </div>
-
-      <div style={cardStyle}>
-        <div style={labelStyle}>Active Alerts</div>
-        <div style={valueStyle}>{activeAlerts}</div>
-      </div>
-
-      <div style={cardStyle}>
-        <div style={labelStyle}>Repeat-Offender Cases</div>
-        <div style={valueStyle}>{repeatOffenderCases}</div>
-      </div>
+      ))}
     </div>
   );
 }

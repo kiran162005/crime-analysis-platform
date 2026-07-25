@@ -15,17 +15,9 @@ import {
 
 export default function TrendChart({ data, title = 'Incidents Over Time' }) {
   return (
-    <div
-      style={{
-        background: '#ffffff',
-        border: '1px solid #e5e7eb',
-        borderRadius: 10,
-        padding: 16,
-        flex: 1,
-        minWidth: 320,
-      }}
-    >
-      <h3 style={{ margin: '0 0 12px', fontSize: 15, color: '#111827' }}>{title}</h3>
+    <div className="card" style={{ flex: 1, minWidth: 320 }}>
+      <span className="eyebrow">Trend</span>
+      <h3 className="card-title" style={{ marginBottom: 12 }}>{title}</h3>
       <ResponsiveContainer width="100%" height={240}>
         <LineChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

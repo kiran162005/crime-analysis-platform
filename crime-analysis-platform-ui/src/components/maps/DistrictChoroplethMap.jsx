@@ -18,6 +18,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import HotspotLayer from './HotspotLayer';
 
 // Default source for Karnataka district boundaries (public, MIT-style
 // curated dataset). Swap this for your own hosted copy in production —
@@ -183,6 +184,9 @@ export default function DistrictChoroplethMap({
   selectedDistrict = null,
   colors = DEFAULT_COLORS,
   height = '600px',
+  hotspots = [],
+  showHotspots = true,
+  onHotspotSelect = () => {},
 }) {
   const [geojson, setGeojson] = useState(geojsonData);
   const [loadError, setLoadError] = useState(null);
@@ -307,6 +311,9 @@ export default function DistrictChoroplethMap({
           />
         )}
         {geojson && <Legend breaks={breaks} colors={colors} unitLabel="Incidents" />}
+        {showHotspots && hotspots.length > 0 && (
+          <HotspotLayer hotspots={hotspots} onHotspotSelect={onHotspotSelect} />
+        )}
       </MapContainer>
     </div>
   );
