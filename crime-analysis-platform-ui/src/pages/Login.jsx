@@ -1,17 +1,28 @@
 /**
  * pages/Login.jsx
- * Minimal mock login — picks one of the seeded mock users. Swap for a
- * real form + API Gateway auth call once the Team Lead's endpoint is up.
+ * Minimal mock login, matching the app's navy/shield identity from
+ * AppHeader — this is the first screen anyone sees. Swap for a real
+ * form + API Gateway auth call once the Team Lead's endpoint is up.
  */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 
 const DEMO_ACCOUNTS = [
-  { email: 'admin@scrb.gov.in', label: 'SCRB Admin (full access)' },
-  { email: 'officer.mysuru@scrb.gov.in', label: 'District Officer — Mysuru' },
-  { email: 'investigator@scrb.gov.in', label: 'Investigator' },
+  { email: 'admin@scrb.gov.in', label: 'SCRB Admin', hint: 'Full access, all districts' },
+  { email: 'officer.mysuru@scrb.gov.in', label: 'District Officer', hint: 'Locked to Mysuru' },
+  { email: 'investigator@scrb.gov.in', label: 'Investigator', hint: 'Case-level network access' },
 ];
+
+function ShieldMark() {
+  return (
+    <svg width="40" height="46" viewBox="0 0 26 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13 0L25 4.5V13.5C25 21 20 26.5 13 30C6 26.5 1 21 1 13.5V4.5L13 0Z" fill="#c2410c" />
+      <path d="M13 3.3L22 6.7V13.5C22 19.3 18.2 23.8 13 26.6C7.8 23.8 4 19.3 4 13.5V6.7L13 3.3Z" fill="#101d33" />
+      <circle cx="13" cy="14" r="4.2" fill="#f4f5f7" />
+    </svg>
+  );
+}
 
 export default function Login() {
   const [error, setError] = useState('');
@@ -35,47 +46,58 @@ export default function Login() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#f9fafb',
-        fontFamily: 'system-ui, sans-serif',
+        background: 'var(--color-navy-950)',
+        backgroundImage:
+          'radial-gradient(circle at 20% 20%, var(--color-navy-800) 0%, transparent 45%), radial-gradient(circle at 85% 80%, var(--color-navy-800) 0%, transparent 40%)',
       }}
     >
-      <div
-        style={{
-          background: '#fff',
-          padding: 32,
-          borderRadius: 12,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          width: 340,
-        }}
-      >
-        <h2 style={{ margin: '0 0 4px' }}>Karnataka Crime Analytics</h2>
-        <p style={{ color: '#6b7280', fontSize: 13, marginBottom: 20 }}>
-          Sign in to continue (demo accounts — no real auth yet)
-        </p>
+      <div style={{ width: 360 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+          <ShieldMark />
+          <div>
+            <div style={{ color: '#ffffff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 19 }}>
+              Karnataka SCRB
+            </div>
+            <div style={{ color: '#8fa3c2', fontSize: 12, letterSpacing: '0.03em' }}>
+              Crime Analytics Platform
+            </div>
+          </div>
+        </div>
 
-        {DEMO_ACCOUNTS.map((acc) => (
-          <button
-            key={acc.email}
-            onClick={() => handleLogin(acc.email)}
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: '10px 12px',
-              marginBottom: 8,
-              borderRadius: 8,
-              border: '1px solid #e5e7eb',
-              background: '#f9fafb',
-              textAlign: 'left',
-              cursor: 'pointer',
-              fontSize: 14,
-            }}
-          >
-            {acc.label}
-            <div style={{ fontSize: 11, color: '#9ca3af' }}>{acc.email}</div>
-          </button>
-        ))}
+        <div className="card" style={{ background: '#ffffff' }}>
+          <span className="eyebrow">Sign in</span>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: 13, margin: '0 0 18px' }}>
+            Demo accounts — no real authentication yet.
+          </p>
 
-        {error && <p style={{ color: '#dc2626', fontSize: 13 }}>{error}</p>}
+          {DEMO_ACCOUNTS.map((acc) => (
+            <button
+              key={acc.email}
+              onClick={() => handleLogin(acc.email)}
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '11px 14px',
+                marginBottom: 8,
+                borderRadius: 8,
+                border: '1px solid var(--color-border)',
+                background: 'var(--color-bg)',
+                textAlign: 'left',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                color: 'var(--color-text)',
+              }}
+            >
+              {acc.label}
+              <div style={{ fontSize: 11, color: 'var(--color-text-faint)', fontWeight: 400, marginTop: 2 }}>
+                {acc.hint}
+              </div>
+            </button>
+          ))}
+
+          {error && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 8 }}>{error}</p>}
+        </div>
       </div>
     </div>
   );

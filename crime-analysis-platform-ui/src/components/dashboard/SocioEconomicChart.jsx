@@ -33,21 +33,9 @@ export default function SocioEconomicChart() {
   const direction = correlation >= 0 ? 'positive' : 'negative';
 
   return (
-    <div
-      style={{
-        background: '#ffffff',
-        border: '1px solid #e5e7eb',
-        borderRadius: 10,
-        padding: 16,
-        flex: 1,
-        minWidth: 320,
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <h3 style={{ margin: 0, fontSize: 15, color: '#111827' }}>
-          Socio-Economic Correlation Overlay
-        </h3>
-      </div>
+    <div className="card" style={{ flex: 1, minWidth: 320 }}>
+      <span className="eyebrow">Correlation</span>
+      <h3 className="card-title" style={{ marginBottom: 8 }}>Socio-Economic Correlation Overlay</h3>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
         {INDICATOR_OPTIONS.map((opt) => (

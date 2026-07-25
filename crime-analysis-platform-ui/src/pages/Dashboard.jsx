@@ -18,10 +18,10 @@ import { fetchAlerts } from '../data/mockAlertData';
 import { getDistrictData } from '../data/mockDashboardData';
 import mockHotspotData from '../data/mockHotspotData';
 import { useAuth } from '../auth/AuthContext';
-import { Link } from 'react-router-dom';
+import AppHeader from '../components/layout/AppHeader';
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const isDistrictLocked = user?.role === 'officer' && user?.district;
 
   const [selectedDistrict, setSelectedDistrict] = useState(
@@ -31,8 +31,6 @@ export default function Dashboard() {
   const [alerts, setAlerts] = useState([]);
   const [alertsLoading, setAlertsLoading] = useState(true);
 
-  // District Officers only ever see alerts for their own district — same
-  // "don't show-then-hide" principle applied to the dashboard/map above.
   useEffect(() => {
     let cancelled = false;
     setAlertsLoading(true);
@@ -49,8 +47,7 @@ export default function Dashboard() {
   }, [isDistrictLocked, user]);
 
   // If a District Officer's account is locked to a district, don't let
-  // the UI drift away from it — this is the "reflect it cleanly, don't
-  // show-then-hide" requirement from the brief.
+  // the UI drift away from it — "reflect it cleanly, don't show-then-hide."
   useEffect(() => {
     if (isDistrictLocked) {
       setSelectedDistrict({ name: user.district });
@@ -63,108 +60,81 @@ export default function Dashboard() {
   );
 
   return (
-    <div style={{ padding: 20, fontFamily: 'system-ui, sans-serif' }}>
-      <header style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 24 }}>Karnataka Crime Analytics</h1>
-          <p style={{ margin: '4px 0 0', color: '#6b7280' }}>
-            Showing:{' '}
-            <strong style={{ color: '#111827' }}>{dashboardData.districtName}</strong>
-            {selectedDistrict && !isDistrictLocked && (
-              <button
-                onClick={() => setSelectedDistrict(null)}
-                style={{
-                  marginLeft: 10,
-                  fontSize: 12,
-                  color: '#c2410c',
-                  background: 'none',
-                  border: '1px solid #c2410c',
-                  borderRadius: 6,
-                  padding: '2px 8px',
-                  cursor: 'pointer',
-                }}
-              >
-                Clear selection
-              </button>
-            )}
-          </p>
-        </div>
-        <div style={{ textAlign: 'right', fontSize: 13, color: '#6b7280' }}>
+    <div style={{ minHeight: '100vh' }}>
+      <AppHeader />
+
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
+        <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <strong style={{ color: '#111827' }}>{user?.name}</strong> ({user?.role})
+            <span className="eyebrow">District Overview</span>
+            <h1 style={{ margin: 0, fontSize: 26 }}>{dashboardData.districtName}</h1>
           </div>
-          {(user?.role === 'investigator' || user?.role === 'admin') && (
-            <Link
-              to="/network-graph"
-              style={{ fontSize: 12, color: '#2563eb', display: 'block', marginTop: 4 }}
+          {selectedDistrict && !isDistrictLocked && (
+            <button
+              onClick={() => setSelectedDistrict(null)}
+              style={{
+                fontSize: 12,
+                color: 'var(--color-accent)',
+                background: 'var(--color-accent-soft)',
+                border: '1px solid var(--color-accent)',
+                borderRadius: 6,
+                padding: '5px 10px',
+                cursor: 'pointer',
+                fontWeight: 500,
+              }}
             >
-              Open network graph →
-            </Link>
+              ← Back to statewide view
+            </button>
           )}
-          <button
-            onClick={logout}
-            style={{
-              marginTop: 4,
-              fontSize: 12,
-              color: '#6b7280',
-              background: 'none',
-              border: '1px solid #d1d5db',
-              borderRadius: 6,
-              padding: '2px 8px',
-              cursor: 'pointer',
-            }}
-          >
-            Log out
-          </button>
         </div>
-      </header>
 
-      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-        <div style={{ flex: '1 1 500px', minWidth: 400 }}>
-          <label
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              fontSize: 13,
-              color: '#374151',
-              marginBottom: 8,
-              cursor: 'pointer',
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={showHotspots}
-              onChange={(e) => setShowHotspots(e.target.checked)}
+        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 500px', minWidth: 400 }}>
+            <label
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 13,
+                color: 'var(--color-text-muted)',
+                marginBottom: 8,
+                cursor: 'pointer',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={showHotspots}
+                onChange={(e) => setShowHotspots(e.target.checked)}
+              />
+              Show red-zone hotspots
+            </label>
+            <DistrictChoroplethMap
+              incidentData={sampleIncidentData}
+              selectedDistrict={selectedDistrict?.name}
+              onDistrictSelect={(district) => setSelectedDistrict(district)}
+              hotspots={mockHotspotData}
+              showHotspots={showHotspots}
+              onHotspotSelect={(spot) => console.log('Hotspot clicked:', spot)}
+              height="560px"
             />
-            Show red-zone hotspots
-          </label>
-          <DistrictChoroplethMap
-            incidentData={sampleIncidentData}
-            selectedDistrict={selectedDistrict?.name}
-            onDistrictSelect={(district) => setSelectedDistrict(district)}
-            hotspots={mockHotspotData}
-            showHotspots={showHotspots}
-            onHotspotSelect={(spot) => console.log('Hotspot clicked:', spot)}
-            height="560px"
-          />
-          <div style={{ marginTop: 16 }}>
-            <AlertFeed alerts={alerts} loading={alertsLoading} />
+            <div style={{ marginTop: 16 }}>
+              <AlertFeed alerts={alerts} loading={alertsLoading} />
+            </div>
           </div>
-        </div>
 
-        <div style={{ flex: '1 1 400px', minWidth: 340 }}>
-          <KpiCards kpis={dashboardData.kpis} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <TrendChart
-              data={dashboardData.trend}
-              title={`Incidents Over Time — ${dashboardData.districtName}`}
-            />
-            <CrimeTypeBarChart
-              data={dashboardData.crimeTypes}
-              title={`Crime Type Breakdown — ${dashboardData.districtName}`}
-            />
-            <SocioEconomicChart />
+          <div style={{ flex: '1 1 400px', minWidth: 340 }}>
+            <KpiCards kpis={dashboardData.kpis} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <TrendChart
+                data={dashboardData.trend}
+                title={`Incidents Over Time — ${dashboardData.districtName}`}
+              />
+              <CrimeTypeBarChart
+                data={dashboardData.crimeTypes}
+                title={`Crime Type Breakdown — ${dashboardData.districtName}`}
+              />
+              <SocioEconomicChart />
+            </div>
           </div>
         </div>
       </div>

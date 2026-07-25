@@ -17,15 +17,9 @@ function timeAgo(isoString) {
 
 export default function AlertFeed({ alerts = [], loading = false }) {
   return (
-    <div
-      style={{
-        background: '#ffffff',
-        border: '1px solid #e5e7eb',
-        borderRadius: 10,
-        padding: 16,
-      }}
-    >
-      <h3 style={{ margin: '0 0 12px', fontSize: 15, color: '#111827' }}>
+    <div className="card">
+      <span className="eyebrow">Live Feed</span>
+      <h3 className="card-title" style={{ marginBottom: 12 }}>
         Recent Alerts {alerts.length > 0 && `(${alerts.length})`}
       </h3>
 
