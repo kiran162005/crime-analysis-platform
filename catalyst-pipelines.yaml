@@ -1,0 +1,37 @@
+version: 1
+
+runners:
+  Machine:
+    config-id: 2  # Medium: 2GB RAM, 1.2 vCPU — plenty for a functions-only deploy
+
+images:
+  DeployMachine:
+    image: ubuntu
+
+jobs:
+  deploy_functions:
+    steps:
+      # Node.js (for trend_alert_job, spike-check-signal is Python — see below)
+      - curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+      - apt-get install -y nodejs
+
+      # Python 3.11 (for the CRUD functions, authentication, report-generator, etc.)
+      - apt-get update && apt-get install -y software-properties-common
+      - add-apt-repository -y ppa:deadsnakes/ppa
+      - apt-get update && apt-get install -y python3.11 python3.11-distutils
+      - curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+
+      # Catalyst CLI
+      - npm install -g zcatalyst-cli
+      - catalyst -v
+
+      # Deploy everything defined in catalyst.json's targets — no need to
+      # cd into each function folder individually, catalyst deploy handles
+      # the whole project's targets in one call.
+      - catalyst deploy --project << env.PROJECT_ID >> --org << env.CATALYST_ORG >> --token << env.CATALYST_TOKEN >>
+
+stages:
+  - name: build_and_deploy
+    image: DeployMachine
+    jobs:
+      - deploy_functions
