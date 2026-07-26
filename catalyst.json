@@ -1,7 +1,6 @@
 {
   "functions": {
     "targets": [
-      "crime_analysis_platform_function",
       "alerts",
       "authentication",
       "incident-crud",

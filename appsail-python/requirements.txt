@@ -1,7 +1,7 @@
 Flask==2.3.2
+flask-cors
 pandas
 numpy
 scikit-learn
 python-dotenv
 requests
- 

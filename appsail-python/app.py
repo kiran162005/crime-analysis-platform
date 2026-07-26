@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import os
 from dotenv import load_dotenv
 import pandas as pd
@@ -13,6 +14,14 @@ load_dotenv()  # loads .env for local dev — Catalyst's deployed environment
                 # config instead, .env files aren't meant to be deployed
 
 app = Flask(__name__)
+
+# Allows the browser-hosted frontend (localhost:3000 in dev, and the
+# deployed Catalyst client URL in production) to call this service directly.
+# Without this, all fetch() calls from the React app — including /chat —
+# are silently blocked by the browser's CORS policy before they even reach
+# these routes. Restrict origins via CORS_ALLOWED_ORIGINS in .env for
+# production instead of leaving this wide open.
+CORS(app, origins=os.getenv("CORS_ALLOWED_ORIGINS", "*").split(","))
 
 
 @app.route('/')
