@@ -12,13 +12,45 @@ FOLDER_ID = "55774000000043442"  # Console → File Store → your folder
 
 
 def generate_report_pdf(app, source, is_url=True, pdf_options=None):
-    """Generate a PDF from either a dashboard URL or a raw HTML snapshot.
-    source: URL string, or HTML string if is_url=False.
-    Returns the raw result from SmartBrowz — verify its actual shape (bytes
-    vs. stream vs. dict-with-content-key) on first real test; I don't have a
-    confirmed Python sample of the result object's structure, only the call
-    signature itself."""
+    """Generate a PDF snapshot of a live dashboard URL.
+
+    IMPORTANT — confirmed via Catalyst's own console-generated SDK snippet:
+    convert_to_pdf() takes raw HTML *content*, it does NOT navigate to a URL
+    despite earlier docs implying otherwise (that's what caused the "URL
+    printed as literal text" bug). Only take_screenshot() does real browser
+    navigation with JS rendering. So for a live URL, this does it in two
+    steps: screenshot the real rendered page, then wrap that image in a
+    minimal HTML document and convert THAT to PDF.
+
+    If is_url=False, `source` is already raw HTML and skips the screenshot
+    step entirely, going straight to convert_to_pdf()."""
+    import base64
+    import logging
+    logger = logging.getLogger()
+
     smart_browz = app.smart_browz()
+
+    if is_url:
+        screenshot_result = smart_browz.take_screenshot(
+            source=source,
+            screenshot_options={"type": "jpeg", "quality": 90, "full_page": True},
+            page_options={
+                "viewport": {"width": 1440, "height": 900},
+                "javascript_enabled": True,
+            },
+            navigation_options={"timeout": 15000, "wait_until": "networkidle0"},
+        )
+        image_bytes = screenshot_result.content if hasattr(screenshot_result, "content") else screenshot_result
+        logger.info(f"generate_report_pdf: screenshot captured, {len(image_bytes)} bytes")
+
+        b64_image = base64.b64encode(image_bytes).decode("ascii")
+        html_content = (
+            f'<html><body style="margin:0;padding:0;">'
+            f'<img src="data:image/jpeg;base64,{b64_image}" style="width:100%;" />'
+            f'</body></html>'
+        )
+    else:
+        html_content = source
 
     options = pdf_options or {
         "format": "A4",
@@ -28,18 +60,8 @@ def generate_report_pdf(app, source, is_url=True, pdf_options=None):
         "landscape": False,
     }
 
-    result = smart_browz.convert_to_pdf(
-        source,
-        pdf_options=options,
-        page_options={
-            "viewport": {"width": 1440, "height": 900},
-            "javascript_enabled": True,
-        },
-        navigation_options={"timeout": 15000, "wait_until": "networkidle0"},
-    )
+    result = smart_browz.convert_to_pdf(source=html_content, pdf_options=options)
 
-    import logging
-    logger = logging.getLogger()
     logger.info(f"generate_report_pdf: result type={type(result)}")
 
     # Confirmed via real runtime log: convert_to_pdf() returns a raw

@@ -12,13 +12,10 @@ def handler(request: Request):
         app = zcatalyst_sdk.initialize()
 
         path_parts = [p for p in request.path.strip("/").split("/") if p]
+        if path_parts and path_parts[0] == "incidents":
+            path_parts = path_parts[1:]
 
-        if not path_parts or path_parts[0] != "incidents":
-            response = make_response(jsonify({"message": "Unknown path"}))
-            response.status_code = 404
-            return response
-
-        incident_id = path_parts[1] if len(path_parts) > 1 else None
+        incident_id = path_parts[0] if path_parts else None
 
         if request.method == "GET":
             if incident_id:

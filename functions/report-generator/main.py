@@ -16,7 +16,7 @@ def handler(request: Request):
     replace DEFAULT_DASHBOARD_URL below once the Frontend Engineer's actual
     hosted URL is known, or always require the query param instead.
     """
-    DEFAULT_DASHBOARD_URL = "https://crime-analysis-slate-wpxzhnjf.onslate.in"
+    DEFAULT_DASHBOARD_URL = "https://crime-analysis-platform-60079412156.development.catalystserverless.in/app/index.html"
 
     try:
         if request.method != "GET":

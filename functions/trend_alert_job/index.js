@@ -3,8 +3,8 @@ const catalyst = require('zcatalyst-sdk-node');
 
 // --- Tunables ---
 const LOOKBACK_DAYS = 14;       // window used to compute the "normal" baseline
-const SPIKE_THRESHOLD = 0.01;    // current-period count >= 1.5x baseline avg triggers an alert
-const MIN_BASELINE_SAMPLE = 0;  // don't alert off a baseline with too few historical days
+const SPIKE_THRESHOLD = 1.5;    // current-period count >= 1.5x baseline avg triggers an alert
+const MIN_BASELINE_SAMPLE = 3;  // don't alert off a baseline with too few historical days
 
 /**
  * Job function — triggered nightly via Job Scheduling.
