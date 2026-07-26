@@ -20,6 +20,7 @@ import mockHotspotData from '../data/mockHotspotData';
 import { useAuth } from '../auth/AuthContext';
 import AppHeader from '../components/layout/AppHeader';
 import ChatPanel from '../components/ask-scrb/ChatPanel';
+import ReportGenerator from '../components/reports/ReportGenerator';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -136,6 +137,7 @@ export default function Dashboard() {
                 title={`Crime Type Breakdown — ${dashboardData.districtName}`}
               />
               <SocioEconomicChart />
+              <ReportGenerator />
             </div>
           </div>
         </div>
