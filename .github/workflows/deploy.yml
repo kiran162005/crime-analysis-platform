@@ -1,0 +1,32 @@
+name: Deploy to Catalyst
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Catalyst CLI
+        run: npm install -g zcatalyst-cli
+
+      - name: Verify Catalyst CLI
+        run: catalyst -v
+
+      - name: Deploy to Catalyst
+        run: catalyst deploy --project ${{ secrets.CATALYST_PROJECT_ID }} --org ${{ secrets.CATALYST_ORG }} --token ${{ secrets.CATALYST_TOKEN }}
