@@ -9,7 +9,9 @@
       "risk-score",
       "station-crud",
       "victim-crud",
-      "trend_alert_job"
+      "trend_alert_job",
+      "spike-check-signal",
+      "report-generator"
     ],
     "ignore": [],
     "source": "functions"

@@ -1,8 +1,8 @@
 {
 	"deployment": {
-		"name": "crime_analysis_platform_function",
+		"name": "spike-check-signal",
 		"stack": "python_3_11",
-		"type": "basicio",
+		"type": "event",
 		"env_variables": {}
 	},
 	"execution": {

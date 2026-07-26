@@ -1,40 +1,80 @@
-from flask import Flask, request, jsonify
+import logging
+import zcatalyst_sdk
+from flask import Request, make_response, jsonify
 
-app = Flask(__name__)
+import datastore
 
-links = []
+logger = logging.getLogger()
 
-@app.route('/links', methods=['POST'])
-def create_link():
-    data = request.json
-    links.append(data)
-    return jsonify({"message": "Link Created", "data": data})
 
-@app.route('/links', methods=['GET'])
-def get_all_links():
-    return jsonify(links)
+def handler(request: Request):
+    """
+    Routes (note: function is named links-crud, but the underlying table is
+    `link` singular — see datastore.py for why):
+      GET    /links           -> list all links
+      GET    /links/<id>      -> get one link
+      POST   /links           -> create a link
+      PUT    /links/<id>      -> update a link
+      DELETE /links/<id>      -> delete a link
+    """
+    try:
+        app = zcatalyst_sdk.initialize()
 
-@app.route('/links/<link_id>', methods=['GET'])
-def get_link(link_id):
-    for link in links:
-        if link["link_id"] == link_id:
-            return jsonify(link)
-    return jsonify({"message": "Link Not Found"}), 404
+        path_parts = [p for p in request.path.strip("/").split("/") if p]
+        if path_parts and path_parts[0] == "links":
+            path_parts = path_parts[1:]
 
-@app.route('/links/<link_id>', methods=['PUT'])
-def update_link(link_id):
-    data = request.json
-    for link in links:
-        if link["link_id"] == link_id:
-            link.update(data)
-            return jsonify({"message": "Updated", "data": link})
-    return jsonify({"message": "Link Not Found"}), 404
+        link_id = path_parts[0] if path_parts else None
 
-@app.route('/links/<link_id>', methods=['DELETE'])
-def delete_link(link_id):
-    global links
-    links = [l for l in links if l["link_id"] != link_id]
-    return jsonify({"message": "Deleted"})
+        if request.method == "GET":
+            if link_id:
+                link = datastore.get_link_by_id(app, link_id)
+                if link is None:
+                    response = make_response(jsonify({"message": "Link Not Found"}))
+                    response.status_code = 404
+                    return response
+                return jsonify(link), 200
+            else:
+                links = datastore.get_links(app)
+                return jsonify(links), 200
 
-if __name__ == "__main__":
-    app.run(debug=True)
+        elif request.method == "POST":
+            data = request.get_json(silent=True) or {}
+            created = datastore.create_link(app, data)
+            return jsonify({"message": "Link Created", "data": created}), 201
+
+        elif request.method == "PUT":
+            if not link_id:
+                response = make_response(jsonify({"message": "link_id required"}))
+                response.status_code = 400
+                return response
+            data = request.get_json(silent=True) or {}
+            updated = datastore.update_link(app, link_id, data)
+            if updated is None:
+                response = make_response(jsonify({"message": "Link Not Found"}))
+                response.status_code = 404
+                return response
+            return jsonify({"message": "Updated", "data": updated}), 200
+
+        elif request.method == "DELETE":
+            if not link_id:
+                response = make_response(jsonify({"message": "link_id required"}))
+                response.status_code = 400
+                return response
+            deleted = datastore.delete_link(app, link_id)
+            if not deleted:
+                response = make_response(jsonify({"message": "Link Not Found"}))
+                response.status_code = 404
+                return response
+            return jsonify({"message": "Deleted"}), 200
+
+        else:
+            response = make_response(jsonify({"message": "Method not allowed"}))
+            response.status_code = 405
+            return response
+
+    except Exception as err:
+        logger.error(f"Exception in links-crud: {err}")
+        response = make_response(jsonify({"error": "Internal server error occurred. Please try again"}))
+        response.status_code = 500
+        return response

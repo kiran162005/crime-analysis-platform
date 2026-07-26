@@ -1,6 +1,6 @@
 {
 	"deployment": {
-		"name": "victim-crud",
+		"name": "report-generator",
 		"stack": "python_3_11",
 		"type": "advancedio",
 		"env_variables": {}

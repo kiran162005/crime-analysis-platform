@@ -3,8 +3,8 @@ const catalyst = require('zcatalyst-sdk-node');
 
 // --- Tunables ---
 const LOOKBACK_DAYS = 14;       // window used to compute the "normal" baseline
-const SPIKE_THRESHOLD = 1.5;    // current-period count >= 1.5x baseline avg triggers an alert
-const MIN_BASELINE_SAMPLE = 3;  // don't alert off a baseline with too few historical days
+const SPIKE_THRESHOLD = 0.01;    // current-period count >= 1.5x baseline avg triggers an alert
+const MIN_BASELINE_SAMPLE = 0;  // don't alert off a baseline with too few historical days
 
 /**
  * Job function — triggered nightly via Job Scheduling.
@@ -53,7 +53,7 @@ module.exports = async (jobData, context) => {
     //    a baseline entry — treat that as "no alert", not divide-by-zero).
     const riskScoreUpserts = [];
     const alertInserts = [];
-    const today = new Date().toISOString();
+    const today = toCatalystDateTime(new Date());
 
     for (const key of Object.keys(todayCounts)) {
       const [district, crimeType] = key.split('::');
@@ -104,6 +104,14 @@ module.exports = async (jobData, context) => {
     }
     if (alertInserts.length > 0) {
       await insertInChunks(catalystApp, 'alerts', alertInserts);
+      // Notify — best-effort, chained directly (no Circuits/Push available
+      // on this project's IN data center). One digest covering every spike
+      // found tonight, rather than one email per slice.
+      try {
+        await sendNightlyDigestEmail(catalystApp, alertInserts);
+      } catch (mailErr) {
+        console.error('sendNightlyDigestEmail failed (alerts were still recorded):', mailErr);
+      }
     }
 
     console.log(
@@ -118,7 +126,35 @@ module.exports = async (jobData, context) => {
   }
 };
 
-// ---------- helpers ----------
+// ---------- notification ----------
+
+const ESCALATION_THRESHOLD = 3.0; // 2x the base SPIKE_THRESHOLD — treated as
+// urgent in the email only; there's no severity/escalated column on `alerts`
+// to persist this, so this doesn't invent one.
+
+async function sendNightlyDigestEmail(catalystApp, alertInserts) {
+  const hasEscalated = alertInserts.some((a) => parseFloat(a.spike_ratio) >= ESCALATION_THRESHOLD);
+  const subjectPrefix = hasEscalated ? '[ESCALATED] ' : '[Nightly Digest] ';
+
+  const lines = alertInserts.map((a) => {
+    const flag = parseFloat(a.spike_ratio) >= ESCALATION_THRESHOLD ? ' — ESCALATED' : '';
+    return `- ${a.district} / ${a.crime_type}: ${a.spike_ratio}x baseline${flag}`;
+  });
+
+  const config = {
+    from_email: 'crimeanalysisplatform2026@gmail.com', // must be a
+    // Catalyst-verified sender — unverified senders silently fail to send
+    to_email: ['crimeanalysisplatform2026@gmail.com'],
+    subject: `${subjectPrefix}${alertInserts.length} crime trend spike(s) detected`,
+    content: `Nightly recompute found ${alertInserts.length} spike(s):\n\n${lines.join('\n')}\n\nThis is an automated digest from the nightly trend-alert job.`,
+    html_mode: false
+  };
+
+  const email = catalystApp.email();
+  await email.sendMail(config);
+}
+
+
 
 function sliceKey(district, crimeType) {
   return `${district}::${crimeType}`;
@@ -137,10 +173,23 @@ function round2(n) {
   return Math.round(n * 100) / 100;
 }
 
+/**
+ * Formats a Date into Catalyst's expected datetime string: 'YYYY-MM-DD HH:MM:SS'
+ * (no 'T', no 'Z', no milliseconds — confirmed against Catalyst's column-format docs).
+ * Also shifts by tzOffsetMinutes before formatting, since .toISOString() always
+ * renders UTC — without this shift, "today" silently starts at 5:30am IST instead
+ * of midnight, and day-boundary comparisons drift by that same 5.5 hours.
+ * Default 330 = IST (UTC+5:30). Change if your project's console timezone differs.
+ */
+function toCatalystDateTime(date, tzOffsetMinutes = 330) {
+  const shifted = new Date(date.getTime() + tzOffsetMinutes * 60 * 1000);
+  return shifted.toISOString().slice(0, 19).replace('T', ' ');
+}
+
 function isoDaysAgo(days) {
   const d = new Date();
   d.setDate(d.getDate() - days);
-  return d.toISOString().slice(0, 19).replace('T', ' '); // ZCQL-friendly 'YYYY-MM-DD HH:MM:SS'
+  return toCatalystDateTime(d);
 }
 
 /**

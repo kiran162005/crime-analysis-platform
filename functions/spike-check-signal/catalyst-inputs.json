@@ -1,0 +1,43 @@
+{
+  "test_event_cache_put": {
+    "rule_id": "244758770922106268",
+    "target_id": "12129845",
+    "version": 1,
+    "attempt": 1,
+    "account": {
+      "org_id": "60079412156",
+      "project": {
+        "environment": "Development",
+        "name": "crime-analysis-platform",
+        "id": "55774000000016010"
+      }
+    },
+    "events": [
+      {
+        "data": {
+          "cache_name": "98a35e03",
+          "cache_value": "e626089fe6",
+          "project_details": {
+            "project_name": "crime-analysis-platform",
+            "id": "55774000000016010",
+            "project_type": "Live"
+          },
+          "segment_details": {
+            "segment_name": "Default",
+            "id": "55774000000016028"
+          },
+          "expiry_in_hours": 28,
+          "expires_in": "Jul 27, 2026 07:56 PM",
+          "ttl_in_milliseconds": "100800000"
+        },
+        "id": "ebd46688-341e-a0ab-923a-56dc3a9dd66",
+        "time_in_ms": "1785061566803",
+        "source": "publisher_id:67798123844365504/service:cloudscalecache/account:30359043",
+        "event_config": {
+          "api_name": "cache_item_created",
+          "id": "32642953576587774"
+        }
+      }
+    ]
+  }
+}

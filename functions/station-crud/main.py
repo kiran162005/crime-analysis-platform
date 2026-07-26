@@ -1,40 +1,79 @@
-from flask import Flask, request, jsonify
+import logging
+import zcatalyst_sdk
+from flask import Request, make_response, jsonify
 
-app = Flask(__name__)
+import datastore
 
-stations = []
+logger = logging.getLogger()
 
-@app.route('/stations', methods=['POST'])
-def create_station():
-    data = request.json
-    stations.append(data)
-    return jsonify({"message": "Station Created", "data": data})
 
-@app.route('/stations', methods=['GET'])
-def get_all_stations():
-    return jsonify(stations)
+def handler(request: Request):
+    """
+    Routes:
+      GET    /stations           -> list all stations
+      GET    /stations/<id>      -> get one station
+      POST   /stations           -> create a station
+      PUT    /stations/<id>      -> update a station
+      DELETE /stations/<id>      -> delete a station
+    """
+    try:
+        app = zcatalyst_sdk.initialize()
 
-@app.route('/stations/<station_id>', methods=['GET'])
-def get_station(station_id):
-    for station in stations:
-        if station["station_id"] == station_id:
-            return jsonify(station)
-    return jsonify({"message": "Station Not Found"}), 404
+        path_parts = [p for p in request.path.strip("/").split("/") if p]
+        if path_parts and path_parts[0] == "stations":
+            path_parts = path_parts[1:]
 
-@app.route('/stations/<station_id>', methods=['PUT'])
-def update_station(station_id):
-    data = request.json
-    for station in stations:
-        if station["station_id"] == station_id:
-            station.update(data)
-            return jsonify({"message": "Updated", "data": station})
-    return jsonify({"message": "Station Not Found"}), 404
+        station_id = path_parts[0] if path_parts else None
 
-@app.route('/stations/<station_id>', methods=['DELETE'])
-def delete_station(station_id):
-    global stations
-    stations = [s for s in stations if s["station_id"] != station_id]
-    return jsonify({"message": "Deleted"})
+        if request.method == "GET":
+            if station_id:
+                station = datastore.get_station_by_id(app, station_id)
+                if station is None:
+                    response = make_response(jsonify({"message": "Station Not Found"}))
+                    response.status_code = 404
+                    return response
+                return jsonify(station), 200
+            else:
+                stations = datastore.get_stations(app)
+                return jsonify(stations), 200
 
-if __name__ == "__main__":
-    app.run(debug=True)
+        elif request.method == "POST":
+            data = request.get_json(silent=True) or {}
+            created = datastore.create_station(app, data)
+            return jsonify({"message": "Station Created", "data": created}), 201
+
+        elif request.method == "PUT":
+            if not station_id:
+                response = make_response(jsonify({"message": "station_id required"}))
+                response.status_code = 400
+                return response
+            data = request.get_json(silent=True) or {}
+            updated = datastore.update_station(app, station_id, data)
+            if updated is None:
+                response = make_response(jsonify({"message": "Station Not Found"}))
+                response.status_code = 404
+                return response
+            return jsonify({"message": "Updated", "data": updated}), 200
+
+        elif request.method == "DELETE":
+            if not station_id:
+                response = make_response(jsonify({"message": "station_id required"}))
+                response.status_code = 400
+                return response
+            deleted = datastore.delete_station(app, station_id)
+            if not deleted:
+                response = make_response(jsonify({"message": "Station Not Found"}))
+                response.status_code = 404
+                return response
+            return jsonify({"message": "Deleted"}), 200
+
+        else:
+            response = make_response(jsonify({"message": "Method not allowed"}))
+            response.status_code = 405
+            return response
+
+    except Exception as err:
+        logger.error(f"Exception in station-crud: {err}")
+        response = make_response(jsonify({"error": "Internal server error occurred. Please try again"}))
+        response.status_code = 500
+        return response
