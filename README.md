@@ -197,7 +197,7 @@ catalyst deploy
 
 | Role | Responsibilities |
 |---|---|
-| Team Lead / Backend & Data Architect | Data Store schema, Authentication, CRUD Functions, API Gateway |
+| Backend & Data Architect | Data Store schema, Authentication, CRUD Functions, API Gateway |
 | Frontend Engineer | React client, maps, dashboards, network graph, chat UI |
 | Network & Link Analysis Engineer | Link-building logic, repeat-offender tracking, MO similarity |
 | ML/AI Engineer | Hotspot detection, risk scoring, anomaly detection, QuickML RAG |
