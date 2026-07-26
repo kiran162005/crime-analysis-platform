@@ -203,7 +203,6 @@ catalyst deploy
 | ML/AI Engineer | Hotspot detection, risk scoring, anomaly detection, QuickML RAG |
 | DevOps / Automation & Presentation Lead | Cron, Signals, Circuits, SmartBrowz, Pipelines, pitch deck |
 
-See [`PROGRESS.md`](./PROGRESS.md) for live status across all workstreams.
 
 ## Deployment
 
