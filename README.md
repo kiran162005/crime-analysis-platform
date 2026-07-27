@@ -210,5 +210,5 @@ Deployed exclusively on Zoho Catalyst — Web Client Hosting, AppSail, Functions
 
 | Service | Link |
 |---|---|
-| Web Client | _add production URL here_ |
-| AppSail (ML service) | _add production URL here_ |
+| Web Client |(https://crime-analysis-platform-60079412156.development.catalystserverless.in/app/index.html) |
+| AppSail (ML service) |(https://crime-analysis-api-50044230287.development.catalystappsail.in) |
